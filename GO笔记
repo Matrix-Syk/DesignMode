@@ -368,4 +368,946 @@ func main() {
     r = append(r[:0], r[1:]...)
     fmt.Println(r)
 }
+2.3Map
+package main
 
+import (
+	"fmt"
+	"math/rand"
+	"sort"
+	strings "strings"
+)
+
+func main() {
+	// 仅声明map值为nil,未初始化
+	var a map[string]int
+	// a["白沙"] = 12 未初始化是不可以直接添加值的,未申请内存
+	fmt.Println(a == nil)
+	// map的初始化
+	a = make(map[string]int, 8)
+	// map添加值
+	a["白沙"] = 12
+	a["利群"] = 18
+	fmt.Println(a)
+	fmt.Printf("Type:%T\n", a)
+	// 按照预想的格式输出
+	fmt.Printf("Type:%#v\n", a)
+	// 声明时直接初始化
+	b := map[int]bool{1: true, 2: false}
+	fmt.Println(b)
+	fmt.Printf("b:%T\n", b)
+	fmt.Printf("Type:%#v\n", b)
+	// 判断某个key是否存在
+	/*v, ok := a["中华"]
+	if ok {
+		fmt.Println(v)
+	} else {
+		fmt.Println("无")
+	}*/
+	// 遍历,打印顺序与添加顺序无关
+	for s, i := range a {
+		fmt.Println(s, i)
+	}
+	// 只遍历key
+	for key := range b {
+		fmt.Println(key)
+	}
+	// 只遍历value
+	for _, i := range a {
+		fmt.Println(i)
+	}
+	// 按照指定顺序遍历
+	var scopeMap = make(map[string]int, 100)
+	for i := 0; i < 50; i++ {
+		key := fmt.Sprintf("stu%02d", i)
+		scopeMap[key] = rand.Intn(100) // 任意生成0~99的随机整数
+	}
+	fmt.Println(scopeMap)
+	/*v,ok = scopeMap["stu01"]
+	if ok {
+		fmt.Println("存在")
+	}*/
+	/*for key, value := range scopeMap {
+		fmt.Println(key, value)
+	}*/
+	// 按照key从小到大的顺序遍历
+	// 先取出所有的key,存放到切片中
+	keys := make([]string, 0, 100)
+	for key := range scopeMap {
+		keys = append(keys, key)
+	}
+	// 对keys排序
+	sort.Strings(keys)
+	// 根据排序好的切片对map遍历
+	for _, k := range keys {
+		fmt.Println(k, scopeMap[k])
+	}
+	// 删除
+	delete(a, "白沙")
+	fmt.Println(a)
+
+	// 复杂map
+	// 1.元素类型为map的切片
+	var mapSlice = make([]map[string]int, 5, 8)
+	// map使用make初始化时指定容量,并不能指定长度
+	mapSlice[0] = make(map[string]int, 8)
+	mapSlice[0]["白沙"] = 12
+	//mapSlice[1]["中华"] = 45 切片内层的map未初始化的不能添加
+	fmt.Println(mapSlice)
+	fmt.Println(len(mapSlice[0]))
+	// 2.元素为切片的map
+	sliceMap := make(map[string][]int, 8) // 完成对map的初始化
+	v, ok := sliceMap["中国"]
+	if ok {
+		fmt.Println(v)
+	} else {
+		sliceMap["中国"] = make([]int, 8) // 切片初始化
+		sliceMap["中国"][0] = 100
+		sliceMap["中国"][1] = 20
+		sliceMap["中国"] = append(sliceMap["中国"], 1000)
+	}
+	fmt.Println(sliceMap)
+	// homework->统计"how do you do",每个单词出现的次数
+	s := "how do you do"
+	getCount(s)
+	z := 10;
+	getChange(z)
+	fmt.Println("函数外的z为",z)
+}
+func getCount(s string)  {
+	var t = strings.Split(s, " ")
+	fmt.Println(t)
+	countString := make(map[string]int, 10)
+	for _, value := range t {
+		_,ok := countString[value]
+		if ok {
+			countString[value] += 1
+		}else {
+			countString[value] = 1
+		}
+	}
+	fmt.Println(countString)
+}
+func getChange(z int) {
+	z = 15;
+	fmt.Println("函数里z为",z)
+}
+3.1函数
+package main
+
+import (
+	"fmt"
+	"strings"
+)
+
+// 函数
+func main() {
+	result := intSum(10, 15)
+	fmt.Println(result)
+	result = intSum2(20, 30)
+	fmt.Println(result)
+	result = intSum3(1, 2, 3, 4, 5)
+	fmt.Println(result)
+	result = intsum4(1, 1, 2, 3, 4, 5)
+	fmt.Println(result)
+	// 接受多个返回值的函数
+	result1, result2 := intCal(50, 25)
+	fmt.Println(result1, result2)
+	useDefer()
+	// 匿名函数,需要定义在函数内部
+	func() {
+		fmt.Println("Hello,World")
+	}() // 尾部大括号后加上(),这个匿名函数会被直接调用
+	a := func() {
+		fmt.Println("将函数赋值给变量,并执行变量")
+	}
+	a()
+	b := bi()
+	b()
+	// 闭包升级
+	r := makeSuffix(".txt")
+	name := r("斗破苍穹")
+	fmt.Println(name)
+
+	// 异常处理
+	x()
+	y()
+	z()
+}
+func intSum(a int, b int) int {
+	return a + b
+}
+
+// 可以直接命名返回值,但是要用括号括起来,而且返回时可以直接返回,不再写返回变量名
+func intSum2(a int, b int) (ret int) {
+	ret = a + b
+	return
+}
+
+// 接收可变参数,其实接收的就是一个切片
+func intSum3(a ...int) (ret int) {
+	fmt.Printf("参数类型:%T\n", a)
+	for _, v := range a {
+		ret += v
+	}
+	return
+}
+
+// 固定参数与可变参数同时存在时,将可变参数放在最后
+func intsum4(a int, b ...int) int {
+	ret := 0
+	for _, v := range b {
+		ret = ret + v - a
+	}
+	return ret
+}
+
+// 多返回值,当一个函数的多个参数类型一直,互相挨着就可以如下简写.返回值也类似
+func intCal(a, b int) (sum, sub int) {
+	sum = a + b
+	sub = a - b
+	return
+}
+
+// defer语句,限制性所属函数的其他与句,在return前执行defer语句,先被defer的语句最后被执行，最后被 defer 的语句，最先被执行。
+func useDefer() {
+	fmt.Println("start")
+	defer fmt.Println("1")
+	defer fmt.Println("2")
+	defer fmt.Println("3")
+	fmt.Println("end")
+}
+
+// 闭包
+// 定义一个函数,它的返回值也是一个函数,执行函数并使用变量接收返回值,该变量包含了返回的匿名函数和引用的局部变量,就是一个闭包
+func bi() func() {
+	return func() {
+		name := "小明"
+		fmt.Println("你好,", name)
+	}
+}
+
+// 闭包升级
+func makeSuffix(suffix string) func(name string) string {
+	return func(name string) string {
+		if !strings.HasSuffix(name, suffix) {
+			name = name + suffix
+		}
+		return name
+	}
+}
+
+// 异常处理
+func x() {
+	fmt.Println("func a....")
+}
+func y() {
+	// 想要处理异常就需要使用defer定义函数并使用recover()函数收集错误并处理,类似于try-catch
+	defer func() {
+		// 收集错误,必须定义在可能出现panic的代码之前
+		err := recover()
+		// 判断错误是否为空
+		if err != nil {
+			fmt.Println("b 函数出现异常")
+		}
+	}()
+	// 函数执行遇到panic会出现异常
+	panic("panic in b")
+}
+func z() {
+	fmt.Println("func c....")
+}
+
+4.1指针
+package main
+
+import "fmt"
+
+// 指针
+func main() {
+	a := 10
+	b := &a // b就是指针 *int,存储的值为内存地址类型(a的地址)
+	fmt.Printf("%v %p\n", a, &a)
+	fmt.Printf("%v %p", b, &b)
+	// 根据指针取值,使用*
+	c := *b
+	fmt.Println(c) // 10,取到a的值
+	d := 10
+	modify1(d)
+	fmt.Println(d) // 10,未改变 参数值更改仅发生在函数内部
+	// 根据指针赋值
+	modify2(&d)
+	fmt.Println(d) // 值更改,通过指针赋值就是在内存中更改值,全局应用
+	initialization()
+}
+func modify1(x int) {
+	x = 100
+}
+func modify2(y *int) {
+	*y = 100
+}
+func initialization() {
+	var a *int // 未初始化的指针类型
+	// *a = 100 报错,指针类型a未初始化,是一个nil空指针类型.不能通过这个地址赋值
+	a = new(int)    // 对指针类型初始化,即为a分配地址,但是改地址存储的为0,make也是初始化,但是它仅能初始化slice,map,channel
+	fmt.Println(*a) // 0
+	*a = 100
+	fmt.Println(a)
+}
+4.2自定义类型与类型别名
+package main
+
+import "fmt"
+
+// 自定义类型与类型别名
+
+// MyInt 基于int类型的自定义类型
+type MyInt int
+
+// 类型别名
+
+// NewInt 为int类型取别名
+// type NewInt = int 1.9后启用
+
+func main() {
+	var a MyInt
+	fmt.Printf("%v %T\n", a, a)
+	/*var b NewInt
+	fmt.Printf("%v %T\n", b, b)*/
+
+}
+4.3结构体定义与实例化
+package main
+
+import "fmt"
+
+// 结构体,类似于java中的class,在内存中占有一块连续的空间
+func main() {
+	var p1 person
+	p1.name = "小明"
+	p1.age = 15
+	p1.city = "杭州"
+	fmt.Printf("%#v\n", p1)
+
+	// 匿名结构体
+	var user struct {
+		name, city string
+		married    bool
+	}
+	user.name = "小王子"
+	user.city = "北京"
+	user.married = false
+	fmt.Printf("%#v\n", user)
+
+	// 结构体指针
+	var p2 = new(person)
+	/*(*p2).name = "小红"
+	(*p2).city = "北京"
+	(*p2).age = 18*/
+	//上面的写法太复杂,go增加了语法糖,支持结构体指针直接点
+	p2.name = "小刚"
+	p2.city = "上海"
+	p2.age = 20
+	fmt.Printf("%#v\n", p2)
+
+	// 取结构体的类型实例化
+	p3 := &person{}
+	(*p3).name = "小强"
+	p3.city = "广州"
+	p3.age = 25
+	fmt.Printf("%T\n", p3)
+	fmt.Printf("%#v\n", p3)
+
+	// 结构体初始化
+	// key-value形式
+	var p4 = person{
+		name: "喜羊羊",
+		city: "羊村",
+		age:  5,
+	}
+	fmt.Printf("%#v\n", p4)
+	p5 := &person{
+		name: "懒羊羊",
+		city: "羊村",
+	}
+	fmt.Printf("%#v\n", p5)
+
+	// 值列表初始化,即不写key值,按顺序初始化,不能省略某一个属性值
+	p6 := person{
+		"沸羊羊",
+		5,
+		"羊村",
+	}
+
+	// 构造函数
+	fmt.Printf("%#v\n", p6)
+	p7 := newPerson("暖羊羊", 6, "羊村")
+	fmt.Printf("%T\n", p7)
+	fmt.Printf("%#v\n", p7)
+	fmt.Printf("%p\n", p7)
+
+	*p7 = person{
+		"灰太狼",
+		10,
+		"狼堡",
+	}
+	fmt.Printf("%#v\n", p7)
+	fmt.Printf("%p\n", p7)
+}
+
+// 定义结构体
+type person struct {
+	name string
+	age  int
+	city string
+
+}
+
+/* 构造函数,结构体是一个值类型,每次赋值或拷贝都是完整的值拷贝,为了避免以此带来的内存开销,构造函数返回一个指针类型
+	这样在赋值或者拷贝的时候都只是对同一地址的值的操作,减少了内存开销
+*/
+func newPerson(name string, age int, city string) *person {
+	return &person{name: name, age: age, city: city}
+}
+
+4.4方法与接收者
+package main
+
+import "fmt"
+
+// Person 结构体
+type Person struct {
+	name, gender string
+	age          int8
+}
+// SetAge1 使用指针类型作为接收者
+func (p *Person) SetAge1(newAge int8) {
+	p.age = newAge
+}
+// SetAge2 使用值类型作为接收者
+// 方法或者函数传入接受者或者参数,在内部进行修改的时候都是先完成值拷贝,再对复制出来的进行操作,所以对原有的进行修改,需要传入指针类型
+func (p Person) SetAge2(newAge int8) {
+	p.age = newAge
+}
+
+// NewPerson1 是Person结构体的构造函数
+func NewPerson1(name string, gender string, age int8) *Person {
+	return &Person{name: name, gender: gender, age: age}
+}
+
+// 为Person类型定义一个方法
+func (p Person) dream() {
+	fmt.Println(p.name+"的名字是学好Go")
+}
+func main() {
+	p1 := NewPerson1("灰太狼", "狼", int8(10))
+	// (*p1).dream()
+	p1.dream()
+	p1.SetAge1(20)
+	fmt.Println(p1.age)
+	p1.SetAge2(30)
+	fmt.Println(p1.age) // 20 并未完成修改.
+}
+4.4结构体嵌套
+package main
+
+import "fmt"
+
+func main() {
+	// 匿名字段，应为匿名字段在一个结构体中只能存在一个该类型，不常用，常用于嵌套自定义类型，如此处的Address
+	s1 := Student{
+		"喜羊羊",
+		5,
+		Address{
+			"上海",
+			"羊村",
+		}, // 嵌套结构体
+	}
+	fmt.Printf("%#v\n", s1)
+	s2 := Stu{
+		"懒羊羊",
+		5,
+		231,
+		Classes{
+			"小班",
+			12,
+		},
+	}
+	fmt.Println(s2.number) // 嵌套结构体，访问同名属性，由外到内，当同名属性在同一层，即同名属性都属于嵌套的内层，编译无法通过
+	fmt.Println(s2.Classes.number)
+	fmt.Println(s2.grade) // 嵌套结构体，内层非崇明属性可以直接访问，省略嵌套结构体名称
+
+	//结构的继承
+	dog := Dog{
+		4,
+		&Animal{
+			"旺财",
+		},
+	}
+	fmt.Printf("%#v\n", dog)
+	dog.run()
+	dog.wang()
+}
+
+// Student 结构体的匿名字段
+type Student struct {
+	string
+	int
+	Address
+}
+
+// Address 地址,在student中以用，就形成了嵌套结构体
+type Address struct {
+	province string
+	city     string
+}
+type Stu struct {
+	name   string
+	age    int
+	number int
+	Classes
+}
+type Classes struct {
+	grade  string
+	number int
+}
+
+// Animal 结构体的继承，通过结构体的嵌套实现
+type Animal struct {
+	name string
+}
+
+func (a Animal) run() {
+	fmt.Printf("%s会跑。。。\n", a.name)
+}
+
+type Dog struct {
+	feet    int8
+	*Animal // 匿名嵌套，嵌套的为指针
+}
+
+func (d Dog) wang() {
+	fmt.Printf("%s会汪汪汪...\n", d.name)
+}
+4.5结构体可见性与json
+package main
+
+import "fmt"
+
+func main() {
+	// 匿名字段，应为匿名字段在一个结构体中只能存在一个该类型，不常用，常用于嵌套自定义类型，如此处的Address
+	s1 := Student{
+		"喜羊羊",
+		5,
+		Address{
+			"上海",
+			"羊村",
+		}, // 嵌套结构体
+	}
+	fmt.Printf("%#v\n", s1)
+	s2 := Stu{
+		"懒羊羊",
+		5,
+		231,
+		Classes{
+			"小班",
+			12,
+		},
+	}
+	fmt.Println(s2.number) // 嵌套结构体，访问同名属性，由外到内，当同名属性在同一层，即同名属性都属于嵌套的内层，编译无法通过
+	fmt.Println(s2.Classes.number)
+	fmt.Println(s2.grade) // 嵌套结构体，内层非崇明属性可以直接访问，省略嵌套结构体名称
+
+	//结构的继承
+	dog := Dog{
+		4,
+		&Animal{
+			"旺财",
+		},
+	}
+	fmt.Printf("%#v\n", dog)
+	dog.run()
+	dog.wang()
+}
+
+// Student 结构体的匿名字段
+type Student struct {
+	string
+	int
+	Address
+}
+
+// Address 地址,在student中以用，就形成了嵌套结构体
+type Address struct {
+	province string
+	city     string
+}
+type Stu struct {
+	name   string
+	age    int
+	number int
+	Classes
+}
+type Classes struct {
+	grade  string
+	number int
+}
+
+// Animal 结构体的继承，通过结构体的嵌套实现
+type Animal struct {
+	name string
+}
+
+func (a Animal) run() {
+	fmt.Printf("%s会跑。。。\n", a.name)
+}
+
+type Dog struct {
+	feet    int8
+	*Animal // 匿名嵌套，嵌套的为指针
+}
+
+func (d Dog) wang() {
+	fmt.Printf("%s会汪汪汪...\n", d.name)
+}
+
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+)
+
+/*结构体的属性名首字母大写就是对外暴露，即外部可以调用，小写则是隐藏，外部无法访问，如小写时序列化，小写的字段就无法完成序列化
+name小写序列化-->{"Title":"大班","allStudents":[{"Id":0},{"Id":1},{"Id":2},{"Id":3},{"Id":4},{"Id":5},{"Id":6},{"Id":7},{"Id":8},{"Id":9}]}
+name小写反序列化-->main.Class{Title:"大班", Students:[]main.Students{main.Students{Id:0, name:""}, main.Students{Id:1, name:""}}}
+特定场景需要自定义首字母大小写的时候，可以使用结构体标签Tag，`json："name"`key-value形式-->使用json包处理该对象时该字段使用name
+如下，序列化时，json字符串中Name属性被续写化成了name
+*/
+func main() {
+	s1 := Class{
+		"大班",
+		make([]Students, 0, 20),
+	}
+	for i := 0; i < 10; i++ {
+		tempStudents := Students{
+			i,
+			fmt.Sprintf("stu%02d", i),
+		}
+		s1.Students = append(s1.Students, tempStudents)
+	}
+	fmt.Printf("%#v\n", s1)
+	// 序列化
+	c1, err := json.Marshal(s1)
+	if err != nil {
+		fmt.Println("序列化失败，异常：", err)
+		return
+	}
+	fmt.Printf("%T\n", c1)
+	fmt.Printf("%s\n", c1)
+	// 反序列化
+	jsonStr := `{"Title":"大班","allStudents":[{"Id":0,"Name":"stu00"},{"Id":1,"Name":"stu01"}]}`
+	var c2 Class
+	// 第一个参数是字节切片，需要转换，后面是一个指针类型需要取址符号
+	json.Unmarshal([]byte(jsonStr), &c2)
+	fmt.Printf("%T\n", c2)
+	fmt.Printf("%#v\n", c2)
+
+}
+
+type Students struct {
+	Id   int
+	Name string `json:"name"`
+}
+
+type Class struct {
+	Title    string
+	Students []Students
+}
+5.1time包
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func main() {
+	now := time.Now() //事件对象
+	fmt.Println(now)
+	year := now.Year()
+	month := now.Month()
+	day := now.Day()
+	hour := now.Hour()
+	minute := now.Minute()
+	sec := now.Second()
+	fmt.Println(year, month, day, hour, minute, sec)
+	// 时间戳
+	timeStamp1 := now.Unix()     // 秒数
+	timeStamp2 := now.UnixNano() // 纳秒数
+	fmt.Println(timeStamp1, timeStamp2)
+	// 将时间戳转换为具体的时间
+	t := time.Unix(1645498374, 0)
+	fmt.Println(t)
+	// 时间间隔，单位纳秒
+	n := 5
+	// 直接写n是不可以的，Sleep接受的Duration时间间隔类型，需要转换
+	time.Sleep(time.Duration(n) * time.Second)
+	fmt.Println("over..")
+	// time的Add方法，接受的也是一个Duration类型
+	// time.Hour是Duration类型的一个小时
+	// 同类方法Sub(减)，Equal(两个时间对比是否相等)
+	nowNext := now.Add(time.Duration(2) * time.Hour)
+	fmt.Println(nowNext)
+	// 定时器,返回一个通道channel
+	/*for t2 := range time.Tick(time.Second) {
+		fmt.Println(t2)
+	}*/
+	// 时间格式化,固定的时间(不可以乱改，24小时制把时改成15)格式代替yyyy-MM-dd HH:mm:ss
+	format := now.Format("2006 01 02 03 04 05")
+	fmt.Println(format)
+	// 获取时区
+	location, err := time.LoadLocation("Asia/Shanghai")
+	if err != nil {
+		fmt.Printf("get location faild,error:%#v\n", err)
+		return
+	}
+	fmt.Println(location)
+	// 解析字符串类型的时间
+	timeStr := "2022/10/12 13:14:00"
+	parse, err := time.Parse("2006/01/02 15:04:05", timeStr)
+	if err != nil {
+		fmt.Printf("time parse faild,error:%#v\n", err)
+		return
+	}
+	fmt.Println(parse)
+	// 带时区解析
+	inLocation, err := time.ParseInLocation("2006/01/02 15:04:05", timeStr, location)
+	if err != nil {
+		fmt.Printf("time parse faild,error:%#v\n", err)
+		return
+	}
+	fmt.Println(inLocation)
+}
+5.2文件操作
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"io/ioutil"
+	"os"
+)
+// 文件操作
+func main() {
+	/*fileObj, err := os.Open("./log.log")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	// 延迟该行代码，退出前执行，释放资源
+	defer fileObj.Close()
+	for {
+		var tmp = make([]byte, 128)
+		read, err2 := fileObj.Read(tmp)
+		if err2 == io.EOF {
+			return
+		}
+		fmt.Println(read)
+		fmt.Println(string(tmp))
+	}*/
+	// readByBufIO("./log.log")
+	// readByIoUtil()
+	write()
+	// writeByBufIo()
+	writeByIoUtil()
+	// 拷贝
+	copy("xx.txt","xxx.txt")
+
+}
+
+// 读取大文件的API
+func readByBufIO() {
+	fileObj, err := os.Open("./log.log")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	// 延迟该行代码，退出前执行，释放资源
+	defer fileObj.Close()
+	reader := bufio.NewReader(fileObj)
+	for {
+		line, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Printf("read file failed err:%#v\n", err)
+			return
+		}
+		fmt.Print(line)
+	}
+}
+
+// 读取整个文件,不能读取大文本
+func readByIoUtil(fileName string) (result string){
+	fileObj, err1 := os.Open(fileName)
+	if err1 != nil {
+		fmt.Println("Open failed")
+	}
+	all, err2 := ioutil.ReadAll(fileObj)
+	if err2 != nil {
+		fmt.Println(err2)
+	}
+	return string(all)
+}
+
+// 文件写入操作
+func write() {
+	file, err := os.OpenFile("./xxx.txt", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	if err != nil {
+		fmt.Print("open file failed error：%#v\n", err)
+	}
+	defer file.Close()
+	file.WriteString("啦啦啦")
+}
+
+// write by bufIo
+func writeByBufIo(fileName string,content string) {
+	file, err := os.OpenFile(fileName, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	if err != nil {
+		fmt.Printf("open file failed error：%#v\n", err)
+	}
+	defer file.Close()
+	writer := bufio.NewWriter(file)
+	// str := "测试BufIO写入"
+	writer.Write([]byte(content))
+	// bufIo是先写入内存，需要调用Flush写入磁盘
+	writer.Flush()
+}
+
+// write by ioUtil
+func writeByIoUtil()  {
+	str:="write by ioUtil"
+	err := ioutil.WriteFile("./xxx.txt", []byte(str), 0644)
+	if err != nil {
+		fmt.Printf("write file failed error：%#v\n", err)
+		return
+	}
+}
+// 拷贝
+func copy(copyFile string,file string) {
+	result := readByIoUtil(copyFile)
+	writeByBufIo(file,result)
+}
+6.1反射
+package main
+
+import (
+	"fmt"
+	"reflect"
+)
+
+func main() {
+	// Typeof
+	str := "abc"
+	reflectType(str)
+	// 反射中有关类型分为两种，类型(Type)和种类(Kind)基本类型使用的是前者，指针，自定义的结构体等使用后者
+	var c cat
+	reflectType(c)
+	var s *string
+	reflectType(s)
+	var slice []int
+	reflectType(slice)
+	var m map[string]int
+	reflectType(m)
+	fmt.Println("###############################")
+	// ValueOf
+	m = make(map[string]int, 8)
+	var h float32
+	m["中国"] = 10
+	h = 15
+	reflectValue(m)
+	reflectValue(h)
+	fmt.Println("********************")
+	reflectSetValue(&h)
+	fmt.Println(h)
+}
+func reflectType(i interface{}) {
+	// 不知道传入的参数是什么类型
+	// 1.类型断言，但是要一个一个猜
+	// 2.反射
+	typeOf := reflect.TypeOf(i)
+	fmt.Println(typeOf)        // 包.类型名 此处类型名为详细类型名,如切片会返回对应的切片种类
+	fmt.Println(typeOf.Name()) // 类型名:结构体返回的是结构体的名字,基础类型返回基础类型名称,集合类没有Name
+	fmt.Println(typeOf.Kind()) // 所属类型:结构体返回struct,基本类型返回基本类型名称,切片类型返回slice
+	fmt.Println("--------------")
+}
+func reflectValue(i interface{}) {
+	// 返回传入参数的值
+	value := reflect.ValueOf(i)
+	fmt.Printf("%v,%T\n", value, value)
+	// 想要获取传入值类型的值,比如传入int8类型,得到的是*reflect.value类型的值,如何得到int8类型的值
+	// 1.通过获取的值获取类型的种类kind
+	kind := value.Kind()
+	// reflect包中定义了多种kind的属性,使用switch匹配
+	/**
+	全部 Kind
+	const (
+		Invalid Kind = iota
+		Bool
+		Int
+		Int8
+		Int16
+		Int32
+		Int64
+		Uint
+		Uint8
+		Uint16
+		Uint32
+		Uint64
+		Uintptr
+		Float32
+		Float64
+		Complex64
+		Complex128
+		Array
+		Chan
+		Func
+		Interface
+		Map
+		Ptr
+		Slice
+		String
+		Struct
+		UnsafePointer
+	)
+	*/
+	switch kind {
+	case reflect.Float32:
+		//匹配到后先调用那几个大类方法转换,再强转换对应的类型
+		/**
+		大类方法
+		Interface
+		Int
+		Float
+		Uint
+		Bool
+		Bytes
+		String
+		*/
+		ret := float32(value.Float())
+		fmt.Printf("%v %T\n", ret, ret)
+	}
+}
+
+// 传入正常的值会报错,go语言所有的方法调用传入的参数都是一个copy值,对参数进行修改只是对copy值的修改,参数的源值不会更改.
+// 报错原因:copy值不可寻址,reflect.Value.Set()参数不能使不可寻址的值,应该使用指针类型
+func reflectSetValue(i interface{}) {
+	v := reflect.ValueOf(i)
+	// 传入指针类型后,无法满足 i.kind,使用Elem()方法获取指针对应的值
+	k := v.Elem().Kind()
+	switch k {
+	case reflect.Float32:
+		v.Elem().SetFloat(100)
+	}
+}
+
+type cat struct{}
