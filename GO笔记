@@ -1311,3 +1311,74 @@ func reflectSetValue(i interface{}) {
 }
 
 type cat struct{}
+6.2结构体反射
+package main
+
+import (
+	"fmt"
+	"reflect"
+)
+
+func main() {
+	s := Student{
+		Name:  "小明",
+		Score: 10,
+	}
+	// 通过反射获取结构体的所有字段
+	stu := reflect.TypeOf(s)
+	name := stu.Name()
+	kind := stu.Kind()
+	fmt.Println(stu, name, kind)
+	// 遍历结构体中的所有字段
+	num := stu.NumField() // 返回结构体属性值的数量
+	for i := 0; i < num; i++ {
+		// 根据结构体字段的索引取得字段
+		// 获取到的字段有如下属性：Name，PkgPath，Type(字段类型),Tag(字段标签)，Offset(字段在结构体的偏移量）等
+		field := stu.Field(i)
+		fmt.Printf("name:%v,type:%v,tag:%v\n",field.Name,field.Type,field.Tag)
+		// 获取具体的tag值
+		fmt.Printf("json:%v\n",field.Tag.Get("json"))
+	}
+	// 根据名字取结构体字段
+	byName, b := stu.FieldByName("Name")
+	if b {
+		fmt.Printf("Name:%v",byName)
+	}
+	// 获取结构体的方法
+	methods := stu.NumMethod()
+	for i := 0; i < methods; i++ {
+		method := stu.Method(i)
+		fmt.Printf("name:%v,type:%v\n",method.Name,method.Type)
+	}
+	// 根据名字取结构体方法
+	methodByName, b2 := stu.MethodByName("Sleep")
+	if b2 {
+		fmt.Printf("方法Name:%v\n",methodByName)
+	}
+	// 想要获取方法并调用的话就需要使用值信息
+	v := reflect.ValueOf(s)
+	study := v.MethodByName("Study")
+	// 通过值信息取到的方法名调用Call方法就是调用取到的方法且
+	//var args =[]reflect.Value{} // 通过反射调用方法，参数必须是[]reflect.value类型，即使是空
+	arg := "小明"
+	args := []reflect.Value{}
+	args = append(args, reflect.ValueOf(arg))
+	call := study.Call(args)
+	fmt.Println(call)
+}
+
+type Student struct {
+	Name  string `json:"name" ini:"studentName"`
+	Score int    `json:"score" ini:"studentScore"`
+}
+
+func (receiver Student) Sleep() string{
+	msg:="中午睡好，下午学好"
+	fmt.Println("学生在午睡")
+	return msg
+}
+func (receiver Student) Study(name string)  string{
+	msg:="好好学习，天天向上"
+	fmt.Printf("%v在学习",name)
+	return msg
+}
